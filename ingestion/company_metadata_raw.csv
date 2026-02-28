@@ -1,0 +1,26 @@
+TICKER,COMPANY_NAME,SECTOR,INDUSTRY,COUNTRY,EXCHANGE,CURRENCY,MARKET_CAP,FULL_TIME_EMPLOYEES,WEBSITE,INGESTED_AT
+AAPL,Apple Inc.,Technology,Consumer Electronics,United States,NMS,USD,3882897899520,150000.0,https://www.apple.com,2026-02-28 01:41:15.415031
+MSFT,Microsoft Corporation,Technology,Software - Infrastructure,United States,NMS,USD,2918992052224,228000.0,https://www.microsoft.com,2026-02-28 01:41:15.720346
+NVDA,NVIDIA Corporation,Technology,Semiconductors,United States,NMS,USD,4314045087744,,https://www.nvidia.com,2026-02-28 01:41:16.645325
+GOOGL,Alphabet Inc.,Communication Services,Internet Content & Information,United States,NMS,USD,3771360870400,190820.0,https://abc.xyz,2026-02-28 01:41:17.053861
+META,"Meta Platforms, Inc.",Communication Services,Internet Content & Information,United States,NMS,USD,1639607173120,78865.0,https://www.meta.com,2026-02-28 01:41:17.462081
+JPM,JPMorgan Chase & Co.,Financial Services,Banks - Diversified,United States,NYQ,USD,809918791680,318512.0,https://www.jpmorganchase.com,2026-02-28 01:41:17.770000
+BAC,Bank of America Corporation,Financial Services,Banks - Diversified,United States,NYQ,USD,363883364352,213207.0,https://www.bankofamerica.com,2026-02-28 01:41:18.072902
+GS,"The Goldman Sachs Group, Inc.",Financial Services,Capital Markets,United States,NYQ,USD,260209967104,47400.0,https://www.goldmansachs.com,2026-02-28 01:41:18.380677
+V,Visa Inc.,Financial Services,Credit Services,United States,NYQ,USD,617242624000,,https://www.visa.com,2026-02-28 01:41:18.696178
+MA,Mastercard Incorporated,Financial Services,Credit Services,United States,NYQ,USD,461577715712,39800.0,https://www.mastercard.com,2026-02-28 01:41:19.302194
+JNJ,Johnson & Johnson,Healthcare,Drug Manufacturers - General,United States,NYQ,USD,598691217408,138200.0,https://www.jnj.com,2026-02-28 01:41:19.610777
+PFE,Pfizer Inc.,Healthcare,Drug Manufacturers - General,United States,NYQ,USD,157209821184,,https://www.pfizer.com,2026-02-28 01:41:20.007884
+UNH,UnitedHealth Group Incorporated,Healthcare,Healthcare Plans,United States,NYQ,USD,265655271424,,https://www.unitedhealthgroup.com,2026-02-28 01:41:20.222526
+ABBV,AbbVie Inc.,Healthcare,Drug Manufacturers - General,United States,NYQ,USD,410356645888,57000.0,https://www.abbvie.com,2026-02-28 01:41:20.535955
+MRK,"Merck & Co., Inc.",Healthcare,Drug Manufacturers - General,United States,NYQ,USD,309275525120,73000.0,https://www.merck.com,2026-02-28 01:41:20.844749
+XOM,Exxon Mobil Corporation,Energy,Oil & Gas Integrated,United States,NYQ,USD,635431419904,57900.0,https://corporate.exxonmobil.com,2026-02-28 01:41:21.152143
+CVX,Chevron Corporation,Energy,Oil & Gas Integrated,United States,NYQ,USD,373399257088,43039.0,https://www.chevron.com,2026-02-28 01:41:21.453786
+COP,ConocoPhillips,Energy,Oil & Gas E&P,United States,NYQ,USD,138686611456,9900.0,https://www.conocophillips.com,2026-02-28 01:41:21.769524
+SLB,SLB N.V.,Energy,Oil & Gas Equipment & Services,United States,NYQ,USD,76770320384,109000.0,https://www.slb.com,2026-02-28 01:41:22.074111
+EOG,"EOG Resources, Inc.",Energy,Oil & Gas E&P,United States,NYQ,USD,67746861056,3400.0,https://www.eogresources.com,2026-02-28 01:41:22.363907
+AMZN,"Amazon.com, Inc.",Consumer Cyclical,Internet Retail,United States,NMS,USD,2254333280256,1576000.0,https://www.amazon.com,2026-02-28 01:41:22.676406
+TSLA,"Tesla, Inc.",Consumer Cyclical,Auto Manufacturers,United States,NMS,USD,1510391414784,134785.0,https://www.tesla.com,2026-02-28 01:41:22.995356
+HD,"The Home Depot, Inc.",Consumer Cyclical,Home Improvement Retail,United States,NYQ,USD,379011137536,470000.0,https://www.homedepot.com,2026-02-28 01:41:23.306686
+MCD,McDonald's Corporation,Consumer Cyclical,Restaurants,United States,NYQ,USD,243381927936,150000.0,https://www.mcdonalds.com,2026-02-28 01:41:23.910089
+NKE,"NIKE, Inc.",Consumer Cyclical,Footwear & Accessories,United States,NYQ,USD,92050235392,77800.0,https://www.nike.com,2026-02-28 01:41:24.229508

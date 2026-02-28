@@ -16,3 +16,6 @@ venv/
 
 # OS
 .DS_Store
+
+dbt_project/ingestion/*.csv
+dbt_project/ingestion/*.csv.gz
