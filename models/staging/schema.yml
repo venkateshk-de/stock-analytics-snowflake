@@ -1,0 +1,132 @@
+version: 2
+
+models:
+
+  # ---------------------------------------------------------------------------
+  # stg_stock_prices
+  # ---------------------------------------------------------------------------
+  - name: stg_stock_prices
+    description: >
+      Cleaned and standardised daily OHLCV stock price data.
+      One row per ticker per trading day. Null/invalid rows and records
+      before `start_date` are excluded.
+    tags: ["staging", "stock_prices"]
+
+    columns:
+      - name: stock_price_id
+        description: Surrogate key — MD5 hash of ticker + price_date
+        tests:
+          - unique
+          - not_null
+
+      - name: ticker
+        description: Uppercase exchange ticker symbol
+        tests:
+          - not_null
+
+      - name: price_date
+        description: Trading date
+        tests:
+          - not_null
+
+      - name: open_price
+        description: Opening price in USD
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "open_price > 0"
+
+      - name: high_price
+        description: Intraday high price in USD
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "high_price >= low_price"
+
+      - name: low_price
+        description: Intraday low price in USD
+        tests:
+          - not_null
+
+      - name: close_price
+        description: Closing price in USD
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "close_price > 0"
+
+      - name: adj_close_price
+        description: Split/dividend-adjusted closing price in USD
+
+      - name: volume
+        description: Number of shares traded (integer)
+
+      - name: price_change
+        description: Absolute price change from open to close (close - open)
+
+      - name: pct_change_open_to_close
+        description: Percentage price change from open to close, rounded to 4dp
+
+      - name: dbt_loaded_at
+        description: Timestamp when dbt last refreshed this row
+
+
+  # ---------------------------------------------------------------------------
+  # stg_company_metadata
+  # ---------------------------------------------------------------------------
+  - name: stg_company_metadata
+    description: >
+      Cleaned and deduplicated company / security reference data.
+      One row per ticker. Market cap categories added for convenience.
+    tags: ["staging", "company_metadata"]
+
+    columns:
+      - name: company_id
+        description: Surrogate key — MD5 hash of ticker
+        tests:
+          - unique
+          - not_null
+
+      - name: ticker
+        description: Uppercase exchange ticker symbol
+        tests:
+          - unique
+          - not_null
+
+      - name: company_name
+        description: Full legal company name
+        tests:
+          - not_null
+
+      - name: exchange
+        description: Primary listing exchange in uppercase (NYSE, NASDAQ, etc.)
+
+      - name: sector
+        description: GICS sector classification (InitCap)
+
+      - name: industry
+        description: GICS industry classification (InitCap)
+
+      - name: country
+        description: Country of incorporation / primary listing (uppercase ISO)
+
+      - name: market_cap_usd
+        description: Most recent market capitalisation in USD (FLOAT)
+
+      - name: market_cap_category
+        description: >
+          Bucketed market cap label:
+          Mega Cap (≥200B), Large Cap (≥10B), Mid Cap (≥2B),
+          Small Cap (≥300M), Micro Cap (>0), Unknown
+        tests:
+          - accepted_values:
+              values: ['Mega Cap', 'Large Cap', 'Mid Cap', 'Small Cap', 'Micro Cap', 'Unknown']
+
+      - name: sec_cik
+        description: SEC Central Index Key (NULL if not US-listed)
+
+      - name: isin
+        description: International Securities Identification Number
+
+      - name: dbt_loaded_at
+        description: Timestamp when dbt last refreshed this row

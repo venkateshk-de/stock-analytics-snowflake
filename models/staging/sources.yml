@@ -1,0 +1,75 @@
+version: 2
+
+sources:
+  - name: cybersyn
+    description: >
+      Cybersyn financial & company data available via Snowflake Marketplace.
+      Database: CYBERSYN (shared from Snowflake Marketplace listing).
+    database: CYBERSYN           # Adjust if your shared DB name differs
+    schema: PUBLIC               # Cybersyn exposes tables in PUBLIC schema
+    tags: ["cybersyn", "raw", "snowflake_marketplace"]
+
+    tables:
+
+      # ---------------------------------------------------------------
+      # Stock price time series (OHLCV daily)
+      # ---------------------------------------------------------------
+      - name: stock_price_timeseries
+        description: >
+          Daily OHLCV (open/high/low/close/volume) price data for US-listed
+          equities sourced from Cybersyn. One row per ticker per trading day.
+        columns:
+          - name: ticker
+            description: Exchange ticker symbol (e.g. AAPL, MSFT)
+            tests:
+              - not_null
+          - name: date
+            description: Trading date (YYYY-MM-DD)
+            tests:
+              - not_null
+          - name: open
+            description: Opening price (USD)
+          - name: high
+            description: Intraday high price (USD)
+          - name: low
+            description: Intraday low price (USD)
+          - name: close
+            description: Closing price (USD)
+            tests:
+              - not_null
+          - name: volume
+            description: Number of shares traded
+          - name: adj_close
+            description: Split/dividend adjusted closing price (USD)
+
+      # ---------------------------------------------------------------
+      # Company / security metadata
+      # ---------------------------------------------------------------
+      - name: company_metadata
+        description: >
+          Reference data for publicly traded companies — name, sector,
+          industry, exchange, and identifiers such as CIK and ISIN.
+        columns:
+          - name: ticker
+            description: Exchange ticker symbol
+            tests:
+              - not_null
+              - unique
+          - name: company_name
+            description: Full legal company name
+            tests:
+              - not_null
+          - name: exchange
+            description: Primary listing exchange (NYSE, NASDAQ, etc.)
+          - name: sector
+            description: GICS sector classification
+          - name: industry
+            description: GICS industry classification
+          - name: market_cap
+            description: Most recent market capitalisation (USD)
+          - name: country
+            description: Country of incorporation / primary listing
+          - name: cik
+            description: SEC Central Index Key (if US-listed)
+          - name: isin
+            description: International Securities Identification Number
