@@ -1,75 +1,71 @@
 version: 2
 
 sources:
-  - name: cybersyn
-    description: >
-      Cybersyn financial & company data available via Snowflake Marketplace.
-      Database: CYBERSYN (shared from Snowflake Marketplace listing).
-    database: CYBERSYN           # Adjust if your shared DB name differs
-    schema: PUBLIC               # Cybersyn exposes tables in PUBLIC schema
-    tags: ["cybersyn", "raw", "snowflake_marketplace"]
-
+  - name: raw
+    description: ""
+    database: stock_analytics
     tables:
-
-      # ---------------------------------------------------------------
-      # Stock price time series (OHLCV daily)
-      # ---------------------------------------------------------------
-      - name: stock_price_timeseries
-        description: >
-          Daily OHLCV (open/high/low/close/volume) price data for US-listed
-          equities sourced from Cybersyn. One row per ticker per trading day.
+      - name: raw_company_metadata
+        description: ""
         columns:
           - name: ticker
-            description: Exchange ticker symbol (e.g. AAPL, MSFT)
-            tests:
-              - not_null
-          - name: date
-            description: Trading date (YYYY-MM-DD)
-            tests:
-              - not_null
-          - name: open
-            description: Opening price (USD)
-          - name: high
-            description: Intraday high price (USD)
-          - name: low
-            description: Intraday low price (USD)
-          - name: close
-            description: Closing price (USD)
-            tests:
-              - not_null
-          - name: volume
-            description: Number of shares traded
-          - name: adj_close
-            description: Split/dividend adjusted closing price (USD)
-
-      # ---------------------------------------------------------------
-      # Company / security metadata
-      # ---------------------------------------------------------------
-      - name: company_metadata
-        description: >
-          Reference data for publicly traded companies — name, sector,
-          industry, exchange, and identifiers such as CIK and ISIN.
-        columns:
-          - name: ticker
-            description: Exchange ticker symbol
-            tests:
-              - not_null
-              - unique
+            data_type: varchar
+            description: ""
           - name: company_name
-            description: Full legal company name
-            tests:
-              - not_null
-          - name: exchange
-            description: Primary listing exchange (NYSE, NASDAQ, etc.)
+            data_type: varchar
+            description: ""
           - name: sector
-            description: GICS sector classification
+            data_type: varchar
+            description: ""
           - name: industry
-            description: GICS industry classification
-          - name: market_cap
-            description: Most recent market capitalisation (USD)
+            data_type: varchar
+            description: ""
           - name: country
-            description: Country of incorporation / primary listing
-          - name: cik
-            description: SEC Central Index Key (if US-listed)
-          - name: isin
-            description: International Securities Identification Number
+            data_type: varchar
+            description: ""
+          - name: exchange
+            data_type: varchar
+            description: ""
+          - name: currency
+            data_type: varchar
+            description: ""
+          - name: market_cap
+            data_type: number
+            description: ""
+          - name: full_time_employees
+            data_type: number
+            description: ""
+          - name: website
+            data_type: varchar
+            description: ""
+          - name: ingested_at
+            data_type: timestamp_ntz
+            description: ""
+
+      - name: raw_stock_prices
+        description: ""
+        columns:
+          - name: date
+            data_type: date
+            description: ""
+          - name: open
+            data_type: float
+            description: ""
+          - name: high
+            data_type: float
+            description: ""
+          - name: low
+            data_type: float
+            description: ""
+          - name: close
+            data_type: float
+            description: ""
+          - name: volume
+            data_type: number
+            description: ""
+          - name: ticker
+            data_type: varchar
+            description: ""
+          - name: ingested_at
+            data_type: timestamp_ntz
+            description: ""

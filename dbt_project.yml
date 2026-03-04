@@ -21,10 +21,13 @@ models:
   stock_analytics:
     staging:
       +materialized: view
-      +schema: staging
+      +schema: STAGING        # maps to your existing STAGING schema
+    intermediate:
+      +materialized: view
+      +schema: INTERMEDIATE   # maps to your existing INTERMEDIATE schema
     marts:
       +materialized: table
-      +schema: marts
+      +schema: MARTS          # maps to your existing MARTS schema     
 
 vars:
   # Adjust this to control how far back to load data
