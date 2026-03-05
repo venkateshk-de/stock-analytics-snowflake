@@ -1,9 +1,15 @@
 # 📈 Stock Market Analytics Platform on Snowflake
 
 ## Overview
-An end-to-end ELT pipeline that ingests stock market data from the Snowflake 
-Marketplace (Cybersyn), transforms it through a layered dbt architecture, 
+An end-to-end ELT pipeline that ingests stock market data from the Yahoo Finance, transforms it through a layered dbt architecture, 
 and serves analytics through a dimensional data mart.
+
+## 📊 Project Documentation
+
+[![dbt docs](https://img.shields.io/badge/dbt-docs-orange?logo=dbt)](https://venkateshk-de.github.io/stock-analytics-snowflake/)
+
+Live dbt lineage graph and model docs:
+👉 [https://venkateshk-de.github.io/stock-analytics-snowflake/](https://venkateshk-de.github.io/stock-analytics-snowflake/)
 
 ## Architecture
 ![Architecture Diagram](docs/architecture_diagram.png)
