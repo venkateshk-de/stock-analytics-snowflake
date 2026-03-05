@@ -1,0 +1,90 @@
+version: 2
+
+models:
+
+  - name: int_stock_prices_joined
+    description: >
+      Stock prices joined with company metadata.
+      Foundation model for all downstream intermediate and mart models.
+    tags: ["intermediate", "stock_prices"]
+    columns:
+      - name: stock_price_id
+        tests: [unique, not_null]
+      - name: ticker
+        tests: [not_null]
+      - name: price_date
+        tests: [not_null]
+      - name: open_price
+        tests: [not_null]
+      - name: high_price
+        tests: [not_null]
+      - name: low_price
+        tests: [not_null]
+      - name: close_price
+        tests: [not_null]
+      - name: volume
+      - name: price_change
+      - name: pct_change_open_to_close
+      - name: company_id
+      - name: company_name
+      - name: sector
+      - name: industry
+      - name: country
+      - name: exchange
+      - name: currency
+      - name: market_cap_usd
+      - name: market_cap_category
+      - name: full_time_employees
+
+  - name: int_stock_daily_returns
+    description: >
+      Adds day-over-day return metrics to joined stock prices.
+      Includes prev_close, daily_return_pct, intraday range, and trading day sequence.
+    tags: ["intermediate", "returns"]
+    columns:
+      - name: stock_price_id
+        tests: [unique, not_null]
+      - name: ticker
+        tests: [not_null]
+      - name: price_date
+        tests: [not_null]
+      - name: prev_close_price
+        description: Previous trading day close price (NULL for first day of history)
+      - name: daily_return_pct
+        description: Day-over-day return % based on previous close (NULL for first day)
+      - name: intraday_range
+        description: high_price minus low_price
+      - name: intraday_range_pct
+        description: Intraday range as % of close price
+      - name: trading_day_seq
+        description: Sequential trading day number per ticker (1 = earliest date)
+
+  - name: int_stock_moving_averages
+    description: >
+      Adds 7, 30, 90-day simple moving averages and volume MAs.
+      Also includes a price_vs_sma_30d signal column.
+    tags: ["intermediate", "moving_averages"]
+    columns:
+      - name: stock_price_id
+        tests: [unique, not_null]
+      - name: ticker
+        tests: [not_null]
+      - name: price_date
+        tests: [not_null]
+      - name: sma_7d
+        description: 7-day simple moving average of close price
+      - name: sma_30d
+        description: 30-day simple moving average of close price
+      - name: sma_90d
+        description: 90-day simple moving average of close price
+      - name: vol_ma_7d
+        description: 7-day moving average of volume
+      - name: vol_ma_30d
+        description: 30-day moving average of volume
+      - name: cumulative_avg_return_pct
+        description: Running average of daily_return_pct since earliest date
+      - name: price_vs_sma_30d
+        description: Whether close is above, below, or at the 30-day MA
+        tests:
+          - accepted_values:
+              values: ['Above 30d MA', 'Below 30d MA', 'At 30d MA']

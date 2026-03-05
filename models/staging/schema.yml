@@ -1,0 +1,97 @@
+version: 2
+
+models:
+
+  - name: stg_stock_prices
+    description: Cleaned daily OHLCV stock price data. One row per ticker per trading day.
+    tags: ["staging", "stock_prices"]
+    columns:
+      - name: stock_price_id
+        description: Surrogate key — hash of ticker + price_date
+        tests:
+          - unique
+          - not_null
+      - name: ticker
+        description: Uppercase ticker symbol
+        tests:
+          - not_null
+      - name: price_date
+        description: Trading date
+        tests:
+          - not_null
+      - name: open_price
+        description: Opening price in USD
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "> 0"
+      - name: high_price
+        description: Intraday high price in USD
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= low_price"
+      - name: low_price
+        description: Intraday low price in USD
+        tests:
+          - not_null
+      - name: close_price
+        description: Closing price in USD
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "> 0"
+      - name: volume
+        description: Shares traded
+      - name: price_change
+        description: close_price minus open_price
+      - name: pct_change_open_to_close
+        description: Percentage change from open to close, 4 decimal places
+      - name: ingested_at
+        description: When the raw record was loaded
+      - name: dbt_updated_at
+        description: When dbt last refreshed this row
+
+  - name: stg_company_metadata
+    description: Cleaned company reference data. One row per ticker.
+    tags: ["staging", "company_metadata"]
+    columns:
+      - name: company_id
+        description: Surrogate key — hash of ticker
+        tests:
+          - unique
+          - not_null
+      - name: ticker
+        description: Uppercase ticker symbol
+        tests:
+          - unique
+          - not_null
+      - name: company_name
+        description: Full company name
+        tests:
+          - not_null
+      - name: sector
+        description: Business sector (InitCap)
+      - name: industry
+        description: Business industry (InitCap)
+      - name: country
+        description: Country of incorporation (UPPER)
+      - name: exchange
+        description: Listing exchange (UPPER)
+      - name: currency
+        description: Trading currency (UPPER)
+      - name: market_cap_usd
+        description: Market capitalisation in USD
+      - name: market_cap_category
+        description: Mega Cap / Large Cap / Mid Cap / Small Cap / Micro Cap / Unknown
+        tests:
+          - accepted_values:
+              values: ['Mega Cap', 'Large Cap', 'Mid Cap', 'Small Cap', 'Micro Cap', 'Unknown']
+      - name: full_time_employees
+        description: Number of full-time employees
+      - name: website
+        description: Company website URL
+      - name: ingested_at
+        description: When the raw record was loaded
+      - name: dbt_updated_at
+        description: When dbt last refreshed this row
