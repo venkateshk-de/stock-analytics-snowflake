@@ -31,6 +31,9 @@ stock-analytics-snowflake/
 | Intermediate | Business logic, financial calculations |
 | Marts | Fact & dimension tables for analytics |
 
+## Lineage Diagram
+
+
 ## Setup Instructions
 _(To be filled as project progresses)_
 
