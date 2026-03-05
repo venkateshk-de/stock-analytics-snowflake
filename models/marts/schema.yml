@@ -1,0 +1,94 @@
+version: 2
+
+models:
+
+  - name: fct_stock_prices
+    description: >
+      Core fact table. One row per ticker per trading day.
+      Combines prices, returns, moving averages, and company attributes.
+      Primary table for dashboards and analysis.
+    tags: ["marts", "stock_prices"]
+    columns:
+      - name: stock_price_id
+        description: Surrogate key
+        tests: [unique, not_null]
+      - name: ticker
+        tests: [not_null]
+      - name: company_name
+      - name: sector
+      - name: industry
+      - name: country
+      - name: exchange
+      - name: currency
+      - name: market_cap_category
+        tests:
+          - accepted_values:
+              values: ['Mega Cap', 'Large Cap', 'Mid Cap', 'Small Cap', 'Micro Cap', 'Unknown']
+      - name: price_date
+        tests: [not_null]
+      - name: price_week
+        description: Monday of the trading week
+      - name: price_month
+        description: First day of the trading month
+      - name: price_year
+        description: First day of the trading year
+      - name: day_of_week
+        description: 0=Sunday, 1=Monday ... 6=Saturday
+      - name: trading_day_seq
+        description: Sequential trading day number per ticker
+      - name: open_price
+        tests: [not_null]
+      - name: high_price
+        tests: [not_null]
+      - name: low_price
+        tests: [not_null]
+      - name: close_price
+        tests: [not_null]
+      - name: prev_close_price
+      - name: volume
+      - name: price_change
+      - name: pct_change_open_to_close
+      - name: daily_return_pct
+      - name: intraday_range
+      - name: intraday_range_pct
+      - name: cumulative_avg_return_pct
+      - name: sma_7d
+      - name: sma_30d
+      - name: sma_90d
+      - name: vol_ma_7d
+      - name: vol_ma_30d
+      - name: price_vs_sma_30d
+        tests:
+          - accepted_values:
+              values: ['Above 30d MA', 'Below 30d MA', 'At 30d MA']
+      - name: market_cap_usd
+      - name: full_time_employees
+      - name: ingested_at
+      - name: dbt_updated_at
+
+  - name: dim_companies
+    description: >
+      Company dimension table. One row per ticker.
+      Join to fct_stock_prices on ticker for company attributes.
+    tags: ["marts", "companies"]
+    columns:
+      - name: company_id
+        tests: [unique, not_null]
+      - name: ticker
+        tests: [unique, not_null]
+      - name: company_name
+        tests: [not_null]
+      - name: sector
+      - name: industry
+      - name: country
+      - name: exchange
+      - name: currency
+      - name: market_cap_usd
+      - name: market_cap_category
+        tests:
+          - accepted_values:
+              values: ['Mega Cap', 'Large Cap', 'Mid Cap', 'Small Cap', 'Micro Cap', 'Unknown']
+      - name: full_time_employees
+      - name: website
+      - name: ingested_at
+      - name: dbt_updated_at

@@ -2,70 +2,65 @@ version: 2
 
 sources:
   - name: raw
-    description: ""
-    database: stock_analytics
+    description: Raw data loaded into Snowflake from source files.
+    database: STOCK_ANALYTICS
+    schema: RAW
+    tags: ["raw", "source"]
+
     tables:
-      - name: raw_company_metadata
-        description: ""
-        columns:
-          - name: ticker
-            data_type: varchar
-            description: ""
-          - name: company_name
-            data_type: varchar
-            description: ""
-          - name: sector
-            data_type: varchar
-            description: ""
-          - name: industry
-            data_type: varchar
-            description: ""
-          - name: country
-            data_type: varchar
-            description: ""
-          - name: exchange
-            data_type: varchar
-            description: ""
-          - name: currency
-            data_type: varchar
-            description: ""
-          - name: market_cap
-            data_type: number
-            description: ""
-          - name: full_time_employees
-            data_type: number
-            description: ""
-          - name: website
-            data_type: varchar
-            description: ""
-          - name: ingested_at
-            data_type: timestamp_ntz
-            description: ""
 
       - name: raw_stock_prices
-        description: ""
+        description: Daily OHLCV stock price data as ingested from source.
         columns:
-          - name: date
-            data_type: date
-            description: ""
-          - name: open
-            data_type: float
-            description: ""
-          - name: high
-            data_type: float
-            description: ""
-          - name: low
-            data_type: float
-            description: ""
-          - name: close
-            data_type: float
-            description: ""
-          - name: volume
-            data_type: number
-            description: ""
-          - name: ticker
-            data_type: varchar
-            description: ""
-          - name: ingested_at
-            data_type: timestamp_ntz
-            description: ""
+          - name: DATE
+            description: Trading date
+            tests:
+              - not_null
+          - name: CLOSE
+            description: Closing price
+            tests:
+              - not_null
+          - name: HIGH
+            description: Intraday high price
+          - name: LOW
+            description: Intraday low price
+          - name: OPEN
+            description: Opening price
+          - name: VOLUME
+            description: Number of shares traded
+          - name: TICKER
+            description: Exchange ticker symbol
+            tests:
+              - not_null
+          - name: INGESTED_AT
+            description: Timestamp when the record was loaded into RAW
+
+      - name: raw_company_metadata
+        description: Company reference data as ingested from source.
+        columns:
+          - name: TICKER
+            description: Exchange ticker symbol
+            tests:
+              - not_null
+          - name: COMPANY_NAME
+            description: Full company name
+            tests:
+              - not_null
+          - name: SECTOR
+            description: Business sector
+          - name: INDUSTRY
+            description: Business industry
+          - name: COUNTRY
+            description: Country of incorporation
+          - name: EXCHANGE
+            description: Listing exchange
+          - name: CURRENCY
+            description: Trading currency
+          - name: MARKET_CAP
+            description: Market capitalisation (raw)
+          - name: FULL_TIME_EMPLOYEES
+            description: Number of full-time employees
+          - name: WEBSITE
+            description: Company website URL
+          - name: INGESTED_AT
+            description: Timestamp when the record was loaded into RAW

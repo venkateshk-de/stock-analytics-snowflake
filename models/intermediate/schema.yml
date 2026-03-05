@@ -2,116 +2,89 @@ version: 2
 
 models:
 
-  - name: int_daily_returns
+  - name: int_stock_prices_joined
     description: >
-      Daily percentage return per stock, calculated using LAG() to compare
-      each trading day's close to the prior trading day's close.
-      Includes both raw and split/dividend-adjusted returns.
+      Stock prices joined with company metadata.
+      Foundation model for all downstream intermediate and mart models.
+    tags: ["intermediate", "stock_prices"]
     columns:
+      - name: stock_price_id
+        tests: [unique, not_null]
       - name: ticker
-        description: Stock ticker symbol (e.g. AAPL, GOOG)
-        tests:
-          - not_null
-      - name: date
-        description: Trading date
-        tests:
-          - not_null
+        tests: [not_null]
+      - name: price_date
+        tests: [not_null]
+      - name: open_price
+        tests: [not_null]
+      - name: high_price
+        tests: [not_null]
+      - name: low_price
+        tests: [not_null]
       - name: close_price
-        description: Unadjusted closing price
-        tests:
-          - not_null
-      - name: adj_close_price
-        description: Split and dividend-adjusted closing price
-      - name: prev_close_price
-        description: Prior trading day's unadjusted close (from LAG)
-      - name: daily_return_pct
-        description: >
-          Day-over-day % return based on unadjusted close.
-          NULL for each ticker's first trading day.
-      - name: daily_adj_return_pct
-        description: >
-          Day-over-day % return based on adjusted close. Preferred for
-          analysis as it accounts for splits and dividends.
-      - name: daily_price_change
-        description: Absolute dollar change in close price vs prior day
-      - name: return_direction
-        description: "UP / DOWN / FLAT / NULL (first day)"
+        tests: [not_null]
+      - name: volume
+      - name: price_change
+      - name: pct_change_open_to_close
+      - name: company_id
+      - name: company_name
+      - name: sector
+      - name: industry
+      - name: country
+      - name: exchange
+      - name: currency
+      - name: market_cap_usd
+      - name: market_cap_category
+      - name: full_time_employees
 
-  - name: int_moving_averages
+  - name: int_stock_daily_returns
     description: >
-      7-day, 30-day, and 90-day Simple Moving Averages (SMA) per stock.
-      Uses ROWS BETWEEN N PRECEDING AND CURRENT ROW to count trading
-      sessions rather than calendar days. Includes bullish/bearish crossover
-      signals and volume spike detection.
+      Adds day-over-day return metrics to joined stock prices.
+      Includes prev_close, daily_return_pct, intraday range, and trading day sequence.
+    tags: ["intermediate", "returns"]
     columns:
+      - name: stock_price_id
+        tests: [unique, not_null]
       - name: ticker
-        description: Stock ticker symbol
-        tests:
-          - not_null
-      - name: date
-        description: Trading date
-        tests:
-          - not_null
+        tests: [not_null]
+      - name: price_date
+        tests: [not_null]
+      - name: prev_close_price
+        description: Previous trading day close price (NULL for first day of history)
+      - name: daily_return_pct
+        description: Day-over-day return % based on previous close (NULL for first day)
+      - name: intraday_range
+        description: high_price minus low_price
+      - name: intraday_range_pct
+        description: Intraday range as % of close price
+      - name: trading_day_seq
+        description: Sequential trading day number per ticker (1 = earliest date)
+
+  - name: int_stock_moving_averages
+    description: >
+      Adds 7, 30, 90-day simple moving averages and volume MAs.
+      Also includes a price_vs_sma_30d signal column.
+    tags: ["intermediate", "moving_averages"]
+    columns:
+      - name: stock_price_id
+        tests: [unique, not_null]
+      - name: ticker
+        tests: [not_null]
+      - name: price_date
+        tests: [not_null]
       - name: sma_7d
         description: 7-day simple moving average of close price
       - name: sma_30d
         description: 30-day simple moving average of close price
       - name: sma_90d
         description: 90-day simple moving average of close price
-      - name: sma_adj_7d
-        description: 7-day SMA of adjusted close price
-      - name: sma_adj_30d
-        description: 30-day SMA of adjusted close price
-      - name: sma_adj_90d
-        description: 90-day SMA of adjusted close price
-      - name: volume_sma_30d
-        description: 30-day rolling average volume
-      - name: sma_7_30_signal
-        description: "BULLISH (7d > 30d), BEARISH (7d < 30d), or NEUTRAL"
-      - name: price_vs_90d_trend
-        description: "ABOVE_TREND / BELOW_TREND / AT_TREND vs 90-day SMA"
-      - name: is_volume_spike
-        description: True if today's volume > 2x the 30-day average volume
-
-  - name: int_volatility
-    description: >
-      Rolling volatility (standard deviation of daily % returns) over 7, 30,
-      and 90-day windows. Includes annualised volatility, Sharpe ratio,
-      and a volatility regime classification (LOW / MEDIUM / HIGH / EXTREME).
-      Builds on int_daily_returns.
-    columns:
-      - name: ticker
-        description: Stock ticker symbol
+      - name: vol_ma_7d
+        description: 7-day moving average of volume
+      - name: vol_ma_30d
+        description: 30-day moving average of volume
+      - name: cumulative_avg_return_pct
+        description: Running average of daily_return_pct since earliest date
+      - name: price_vs_sma_30d
+        description: Whether close is above, below, or at the 30-day MA
         tests:
-          - not_null
-      - name: date
-        description: Trading date
-        tests:
-          - not_null
-      - name: volatility_7d
-        description: Rolling 7-day std dev of adjusted daily returns (daily units)
-      - name: volatility_30d
-        description: Rolling 30-day std dev of adjusted daily returns (daily units)
-      - name: volatility_90d
-        description: Rolling 90-day std dev of adjusted daily returns (daily units)
-      - name: annualised_vol_7d
-        description: "7-day vol annualised (× √252)"
-      - name: annualised_vol_30d
-        description: "30-day vol annualised (× √252) — industry standard metric"
-      - name: annualised_vol_90d
-        description: "90-day vol annualised (× √252)"
-      - name: sharpe_ratio_30d
-        description: >
-          30-day Sharpe ratio = (avg daily return / daily std dev) × √252.
-          Assumes risk-free rate = 0. Higher = better risk-adjusted return.
-      - name: volatility_regime
-        description: >
-          Bucketed annual volatility:
-            LOW     < 15%
-            MEDIUM  15–30%
-            HIGH    30–50%
-            EXTREME > 50%
-      - name: window_rows_7d
-        description: Number of non-null return rows in the 7-day window (audit field)
-      - name: window_rows_30d
-        description: Number of non-null return rows in the 30-day window (audit field)
+          - accepted_values:
+              values: ['Above 30d MA', 'Below 30d MA', 'At 30d MA']

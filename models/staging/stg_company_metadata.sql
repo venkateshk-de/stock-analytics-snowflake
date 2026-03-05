@@ -1,90 +1,109 @@
-with source as (
-    select 
-        TICKER 
-        ,COMPANY_NAME
-        ,SECTOR
-        ,INDUSTRY
-        ,COUNTRY
-        ,EXCHANGE
-        ,CURRENCY
-        ,MARKET_CAP
-        ,FULL_TIME_EMPLOYEES
-        ,WEBSITE
-        ,INGESTED_AT
-    from {{ source('raw', 'raw_company_metadata') }}
+{{
+  config(
+    materialized = 'view',
+    schema       = 'STAGING',
+    tags         = ['staging', 'company_metadata']
+  )
+}}
+
+/*
+  stg_company_metadata
+  --------------------
+  Cleans and standardises raw company reference data.
+
+  Transformations:
+    - Rename columns to snake_case
+    - Normalise casing (ticker/exchange/country → UPPER, sector/industry → INITCAP)
+    - Cast market_cap → FLOAT, full_time_employees → INTEGER
+    - Nullify empty strings
+    - Deduplicate on ticker (keep highest market_cap)
+    - Derive market_cap_category
+*/
+
+with
+
+source as (
+
+    select * from {{ source('raw', 'raw_company_metadata') }}
 
 ),
-renamed_and_cast as (
+
+renamed as (
+
     select
-        -- Identifiers
-        upper(trim(TICKER))                                     as TICKER,
-        trim(COMPANY_NAME)                                      as COMPANY_NAME,
+        upper(trim(ticker))                             as ticker,
+        trim(company_name)                              as company_name,
+        initcap(trim(sector))                           as sector,
+        initcap(trim(industry))                         as industry,
+        upper(trim(country))                            as country,
+        upper(trim(exchange))                           as exchange,
+        upper(trim(currency))                           as currency,
+        market_cap::float                               as market_cap_usd,
+        full_time_employees::integer                    as full_time_employees,
+        nullif(trim(website), '')                       as website,
+        ingested_at                                     as ingested_at
 
-        -- Exchange & classification — normalise to UPPER
-        initcap(trim(SECTOR))                                   as SECTOR,
-        initcap(trim(INDUSTRY))                                 as INDUSTRY,
-        upper(trim(EXCHANGE))                                   as EXCHANGE,
-
-        -- Geography
-        upper(trim(country))                                    as COUNTRY,
-
-        -- Market data
-        CAST(MARKET_CAP as float)                               as MARKET_CAP_USD,
-        trim(CURRENCY)                                          as CURRENCY,
-        FULL_TIME_EMPLOYEES                                     as FULL_TIME_EMPLOYEES,
-        trim(WEBSITE)                                           as WEBSITE,       
-
-        -- Audit
-        current_timestamp()                                     as dbt_loaded_at
     from source
 
 ),
+
 validated as (
-    select TICKER, COMPANY_NAME, SECTOR, INDUSTRY, EXCHANGE, COUNTRY, MARKET_CAP_USD, CURRENCY, FULL_TIME_EMPLOYEES, WEBSITE, dbt_loaded_at
-    from renamed_and_cast
+
+    select *
+    from renamed
     where
         ticker          is not null
-        and company_name is not null
         and trim(ticker) != ''
+        and company_name is not null
 
 ),
--- Deduplicate: if a ticker appears more than once, keep the row with the
--- highest market_cap (most complete / recent snapshot)
+
+-- Keep one row per ticker — highest market cap wins
 deduplicated as (
+
     select *
     from (
-        select TICKER, COMPANY_NAME, SECTOR, INDUSTRY, EXCHANGE, COUNTRY, MARKET_CAP_USD, CURRENCY, FULL_TIME_EMPLOYEES, WEBSITE, dbt_loaded_at
-            ,row_number() over (
+        select
+            *,
+            row_number() over (
                 partition by ticker
-                order by market_cap_usd desc nulls last, dbt_loaded_at desc
+                order by market_cap_usd desc nulls last, ingested_at desc
             ) as rn
         from validated
     )
     where rn = 1
+
 ),
+
 final as (
+
     select
-        -- Surrogate key
-        {{ dbt_utils.generate_surrogate_key(['ticker']) }} as company_id,
-        TICKER,
-        COMPANY_NAME,
-        EXCHANGE,
-        SECTOR,
-        INDUSTRY,
-        COUNTRY,
-        MARKET_CAP_USD,
-        -- Convenience flag
+        {{ dbt_utils.generate_surrogate_key(['ticker']) }}  as company_id,
+        ticker,
+        company_name,
+        sector,
+        industry,
+        country,
+        exchange,
+        currency,
+        market_cap_usd,
+
         case
             when market_cap_usd >= 200e9  then 'Mega Cap'
             when market_cap_usd >= 10e9   then 'Large Cap'
             when market_cap_usd >= 2e9    then 'Mid Cap'
             when market_cap_usd >= 300e6  then 'Small Cap'
             when market_cap_usd >  0      then 'Micro Cap'
-            else 'Unknown'
-        end as market_cap_category,
-        FULL_TIME_EMPLOYEES, 
-        WEBSITE
-        dbt_loaded_at
+            else                               'Unknown'
+        end                                             as market_cap_category,
+
+        full_time_employees,
+        website,
+        ingested_at,
+        current_timestamp()                             as dbt_updated_at
+
     from deduplicated
+
 )
+
 select * from final
