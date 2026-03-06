@@ -1,3 +1,4 @@
+# CI Pipeline for the stock analytics project
 name: dbt CI Pipeline
 
 on:
