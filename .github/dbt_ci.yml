@@ -1,0 +1,224 @@
+name: dbt CI Pipeline
+
+on:
+  pull_request:
+    branches:
+      - main                        # Triggers on PR from develop → main
+    paths:
+      - 'models/**'                 # Run when models change
+      - 'tests/**'                  # Run when tests change
+      - 'macros/**'                 # Run when macros change
+      - 'dbt_project.yml'           # Run when dbt project config changes
+      - 'packages.yml'              # Run when packages change
+      - '.github/workflows/**'      # Run when workflow itself changes
+
+  push:
+    branches:
+      - develop                     # Also runs on direct push to develop
+
+# Cancel in-progress runs if a new commit is pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DBT_VERSION: "1.7.0"
+
+jobs:
+
+  # ─────────────────────────────────────────
+  # JOB 1: dbt Compile (Syntax Check)
+  # ─────────────────────────────────────────
+  dbt-compile:
+    name: "dbt Compile — Syntax Check"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dbt and Snowflake adapter
+        run: |
+          pip install \
+            dbt-core==${{ env.DBT_VERSION }} \
+            dbt-snowflake==${{ env.DBT_VERSION }}
+
+      - name: Generate profiles.yml from GitHub Secrets
+        run: |
+          cat > profiles.yml << EOF
+          stock_analytics:
+            target: ci
+            outputs:
+              ci:
+                type: snowflake
+                account: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+                user: ${{ secrets.SNOWFLAKE_USER }}
+                password: ${{ secrets.SNOWFLAKE_PASSWORD }}
+                role: ${{ secrets.SNOWFLAKE_ROLE }}
+                database: ${{ secrets.SNOWFLAKE_DATABASE }}
+                warehouse: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+                schema: ${{ secrets.SNOWFLAKE_SCHEMA }}
+                threads: 4
+                client_session_keep_alive: false
+          EOF
+
+      - name: Install dbt packages
+        run: dbt deps --profiles-dir .
+
+      - name: Run dbt compile
+        run: dbt compile --profiles-dir . --target ci
+
+  # ─────────────────────────────────────────
+  # JOB 2: dbt Test (Data Quality Checks)
+  # Runs only if compile succeeds
+  # ─────────────────────────────────────────
+  dbt-test:
+    name: "dbt Test — Data Quality"
+    runs-on: ubuntu-latest
+    needs: dbt-compile
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dbt and Snowflake adapter
+        run: |
+          pip install \
+            dbt-core==${{ env.DBT_VERSION }} \
+            dbt-snowflake==${{ env.DBT_VERSION }}
+
+      - name: Generate profiles.yml from GitHub Secrets
+        run: |
+          cat > profiles.yml << EOF
+          stock_analytics:
+            target: ci
+            outputs:
+              ci:
+                type: snowflake
+                account: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+                user: ${{ secrets.SNOWFLAKE_USER }}
+                password: ${{ secrets.SNOWFLAKE_PASSWORD }}
+                role: ${{ secrets.SNOWFLAKE_ROLE }}
+                database: ${{ secrets.SNOWFLAKE_DATABASE }}
+                warehouse: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+                schema: ${{ secrets.SNOWFLAKE_SCHEMA }}
+                threads: 4
+                client_session_keep_alive: false
+          EOF
+
+      - name: Install dbt packages
+        run: dbt deps --profiles-dir .
+
+      - name: Run dbt test — staging layer
+        run: dbt test --profiles-dir . --target ci --select tag:staging
+
+      - name: Run dbt test — intermediate layer
+        run: dbt test --profiles-dir . --target ci --select tag:intermediate
+
+      - name: Run dbt test — marts layer
+        run: dbt test --profiles-dir . --target ci --select tag:marts
+
+      - name: Run singular tests
+        run: dbt test --profiles-dir . --target ci --select test_type:singular
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbt-test-results
+          path: target/run_results.json
+          retention-days: 7
+
+  # ─────────────────────────────────────────
+  # JOB 3: dbt Build (Full Pipeline)
+  # Runs only if compile and test both succeed
+  # ─────────────────────────────────────────
+  dbt-build:
+    name: "dbt Build — Full Pipeline"
+    runs-on: ubuntu-latest
+    needs: [dbt-compile, dbt-test]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dbt and Snowflake adapter
+        run: |
+          pip install \
+            dbt-core==${{ env.DBT_VERSION }} \
+            dbt-snowflake==${{ env.DBT_VERSION }}
+
+      - name: Generate profiles.yml from GitHub Secrets
+        run: |
+          cat > profiles.yml << EOF
+          stock_analytics:
+            target: ci
+            outputs:
+              ci:
+                type: snowflake
+                account: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+                user: ${{ secrets.SNOWFLAKE_USER }}
+                password: ${{ secrets.SNOWFLAKE_PASSWORD }}
+                role: ${{ secrets.SNOWFLAKE_ROLE }}
+                database: ${{ secrets.SNOWFLAKE_DATABASE }}
+                warehouse: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+                schema: ${{ secrets.SNOWFLAKE_SCHEMA }}
+                threads: 4
+                client_session_keep_alive: false
+          EOF
+
+      - name: Install dbt packages
+        run: dbt deps --profiles-dir .
+
+      - name: Run dbt build — staging layer
+        run: dbt build --profiles-dir . --target ci --select tag:staging
+
+      - name: Run dbt build — intermediate layer
+        run: dbt build --profiles-dir . --target ci --select tag:intermediate
+
+      - name: Run dbt build — marts layer
+        run: dbt build --profiles-dir . --target ci --select tag:marts
+
+      - name: Upload build results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbt-build-results
+          path: target/run_results.json
+          retention-days: 7
+
+  # ─────────────────────────────────────────
+  # JOB 4: Notify on failure
+  # ─────────────────────────────────────────
+  notify-on-failure:
+    name: "Notify — Pipeline Failed"
+    runs-on: ubuntu-latest
+    needs: [dbt-compile, dbt-test, dbt-build]
+    if: failure()
+
+    steps:
+      - name: Print failure summary
+        run: |
+          echo "dbt CI pipeline failed"
+          echo "Branch : ${{ github.ref }}"
+          echo "Trigger: ${{ github.actor }}"
+          echo "Commit : ${{ github.sha }}"
+          echo "Check the Actions tab for detailed logs."
