@@ -1,94 +1,261 @@
 version: 2
 
 models:
+  - name: dim_companies
+    description: >
+      Dimension table for company reference data. One row per company/ticker.
+      Used to slice and filter fct_stock_prices in BI tools and dashboards.
+    columns:
+      - name: company_id
+        description: "Surrogate primary key generated from ticker."
+        tests:
+          - not_null
+          - unique
+
+      - name: ticker
+        description: "Stock ticker symbol. Unique per company."
+        tests:
+          - not_null
+          - unique
+
+      - name: company_name
+        description: "Full legal company name."
+        tests:
+          - not_null
+
+      - name: sector
+        description: "Industry sector the company operates in."
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - 'Technology'
+                - 'Financial Services'
+                - 'Healthcare'
+                - 'Energy'
+                - 'Consumer Cyclical'
+                - 'Consumer Defensive'
+                - 'Communication Services'
+                - 'Industrials'
+                - 'Basic Materials'
+                - 'Real Estate'
+                - 'Utilities'
+
+      - name: industry
+        description: "Specific industry within the sector."
+
+      - name: country
+        description: "Country of incorporation."
+        tests:
+          - not_null
+
+      - name: exchange
+        description: "Stock exchange where the ticker is listed."
+        tests:
+          - not_null
+
+      - name: currency
+        description: "Trading currency for this ticker."
+        tests:
+          - not_null
+
+      - name: market_cap_usd
+        description: "Market capitalisation in USD."
+
+      - name: market_cap_category
+        description: "Derived size category: Mega Cap, Large Cap, Mid Cap, Small Cap, Micro Cap or Unknown."
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Mega Cap', 'Large Cap', 'Mid Cap', 'Small Cap', 'Micro Cap', 'Unknown']
+
+      - name: full_time_employees
+        description: "Number of full-time employees as reported by Yahoo Finance."
+
+      - name: website
+        description: "Company website URL."
+
+      - name: ingested_at
+        description: "Timestamp of raw ingestion."
+        tests:
+          - not_null
+
+      - name: dbt_updated_at
+        description: "Timestamp of last dbt model run."
+        tests:
+          - not_null
 
   - name: fct_stock_prices
     description: >
-      Core fact table. One row per ticker per trading day.
-      Combines prices, returns, moving averages, and company attributes.
-      Primary table for dashboards and analysis.
-    tags: ["marts", "stock_prices"]
+      Primary fact table combining all stock price data with daily returns,
+      moving averages, and company attributes. Materialised as TABLE for
+      query performance. This is the main table for BI tools and analysis.
+      Grain: one row per ticker per trading day.
     columns:
       - name: stock_price_id
-        description: Surrogate key
-        tests: [unique, not_null]
-      - name: ticker
-        tests: [not_null]
-      - name: company_name
-      - name: sector
-      - name: industry
-      - name: country
-      - name: exchange
-      - name: currency
-      - name: market_cap_category
+        description: "Surrogate primary key — unique per ticker + price_date combination."
         tests:
+          - not_null
+          - unique
+
+      - name: ticker
+        description: "Stock ticker symbol."
+        tests:
+          - not_null
+
+      - name: company_name
+        description: "Full legal company name."
+        tests:
+          - not_null
+
+      - name: sector
+        description: "Industry sector."
+        tests:
+          - not_null
+
+      - name: industry
+        description: "Specific industry within the sector."
+
+      - name: country
+        description: "Country of incorporation."
+
+      - name: exchange
+        description: "Stock exchange."
+
+      - name: currency
+        description: "Trading currency."
+
+      - name: market_cap_category
+        description: "Market cap size category."
+        tests:
+          - not_null
           - accepted_values:
               values: ['Mega Cap', 'Large Cap', 'Mid Cap', 'Small Cap', 'Micro Cap', 'Unknown']
+
       - name: price_date
-        tests: [not_null]
-      - name: price_week
-        description: Monday of the trading week
-      - name: price_month
-        description: First day of the trading month
-      - name: price_year
-        description: First day of the trading year
-      - name: day_of_week
-        description: 0=Sunday, 1=Monday ... 6=Saturday
-      - name: trading_day_seq
-        description: Sequential trading day number per ticker
-      - name: open_price
-        tests: [not_null]
-      - name: high_price
-        tests: [not_null]
-      - name: low_price
-        tests: [not_null]
-      - name: close_price
-        tests: [not_null]
-      - name: prev_close_price
-      - name: volume
-      - name: price_change
-      - name: pct_change_open_to_close
-      - name: daily_return_pct
-      - name: intraday_range
-      - name: intraday_range_pct
-      - name: cumulative_avg_return_pct
-      - name: sma_7d
-      - name: sma_30d
-      - name: sma_90d
-      - name: vol_ma_7d
-      - name: vol_ma_30d
-      - name: price_vs_sma_30d
+        description: "Trading date. Combined with ticker forms the natural key."
         tests:
+          - not_null
+
+      - name: price_week
+        description: "Week start date derived from price_date."
+        tests:
+          - not_null
+
+      - name: price_month
+        description: "Month start date derived from price_date."
+        tests:
+          - not_null
+
+      - name: price_year
+        description: "Year start date derived from price_date."
+        tests:
+          - not_null
+
+      - name: day_of_week
+        description: "Day of week number (0=Sunday through 6=Saturday in Snowflake)."
+        tests:
+          - not_null
+
+      - name: trading_day_seq
+        description: "Sequential trading day number per ticker."
+        tests:
+          - not_null
+
+      - name: open_price
+        description: "Opening price on the trading day. Must be greater than 0."
+        tests:
+          - not_null
+
+      - name: high_price
+        description: "Highest price on the trading day."
+        tests:
+          - not_null
+
+      - name: low_price
+        description: "Lowest price on the trading day."
+        tests:
+          - not_null
+
+      - name: close_price
+        description: "Closing price on the trading day."
+        tests:
+          - not_null
+
+      - name: prev_close_price
+        description: "Previous trading day closing price. Null for first trading day."
+
+      - name: volume
+        description: "Shares traded on the trading day."
+        tests:
+          - not_null
+
+      - name: price_change
+        description: "Absolute price change from open to close."
+
+      - name: pct_change_open_to_close
+        description: "Percentage change from open to close."
+
+      - name: daily_return_pct
+        description: "Day-over-day return percentage based on previous close."
+
+      - name: intraday_range
+        description: "Absolute intraday price range (high - low)."
+        tests:
+          - not_null
+
+      - name: intraday_range_pct
+        description: "Intraday range as percentage of closing price."
+        tests:
+          - not_null
+
+      - name: cumulative_avg_return_pct
+        description: "Cumulative average daily return from first trading day per ticker."
+
+      - name: sma_7d
+        description: "7-day simple moving average of closing price."
+        tests:
+          - not_null
+
+      - name: sma_30d
+        description: "30-day simple moving average of closing price."
+        tests:
+          - not_null
+
+      - name: sma_90d
+        description: "90-day simple moving average of closing price."
+        tests:
+          - not_null
+
+      - name: vol_ma_7d
+        description: "7-day moving average of trading volume."
+        tests:
+          - not_null
+
+      - name: vol_ma_30d
+        description: "30-day moving average of trading volume."
+        tests:
+          - not_null
+
+      - name: price_vs_sma_30d
+        description: "Signal: whether close price is above, below or at the 30-day SMA."
+        tests:
+          - not_null
           - accepted_values:
               values: ['Above 30d MA', 'Below 30d MA', 'At 30d MA']
-      - name: market_cap_usd
-      - name: full_time_employees
-      - name: ingested_at
-      - name: dbt_updated_at
 
-  - name: dim_companies
-    description: >
-      Company dimension table. One row per ticker.
-      Join to fct_stock_prices on ticker for company attributes.
-    tags: ["marts", "companies"]
-    columns:
-      - name: company_id
-        tests: [unique, not_null]
-      - name: ticker
-        tests: [unique, not_null]
-      - name: company_name
-        tests: [not_null]
-      - name: sector
-      - name: industry
-      - name: country
-      - name: exchange
-      - name: currency
       - name: market_cap_usd
-      - name: market_cap_category
-        tests:
-          - accepted_values:
-              values: ['Mega Cap', 'Large Cap', 'Mid Cap', 'Small Cap', 'Micro Cap', 'Unknown']
+        description: "Market capitalisation in USD."
+
       - name: full_time_employees
-      - name: website
+        description: "Number of full-time employees."
+
       - name: ingested_at
+        description: "Timestamp of raw data ingestion."
+        tests:
+          - not_null
+
       - name: dbt_updated_at
+        description: "Timestamp of last dbt model run."
+        tests:
+          - not_null

@@ -1,90 +1,191 @@
 version: 2
 
 models:
-
   - name: int_stock_prices_joined
     description: >
-      Stock prices joined with company metadata.
-      Foundation model for all downstream intermediate and mart models.
-    tags: ["intermediate", "stock_prices"]
+      Foundation intermediate model that joins cleaned stock prices with company
+      metadata. All downstream intermediate and mart models build on top of this.
     columns:
       - name: stock_price_id
-        tests: [unique, not_null]
+        description: "Surrogate key from stg_stock_prices (ticker + price_date)."
+        tests:
+          - not_null
+          - unique
+
       - name: ticker
-        tests: [not_null]
+        description: "Stock ticker symbol."
+        tests:
+          - not_null
+
       - name: price_date
-        tests: [not_null]
+        description: "Trading date."
+        tests:
+          - not_null
+
       - name: open_price
-        tests: [not_null]
+        description: "Opening price on the trading day."
+        tests:
+          - not_null
+
       - name: high_price
-        tests: [not_null]
+        description: "Highest price on the trading day."
+        tests:
+          - not_null
+
       - name: low_price
-        tests: [not_null]
+        description: "Lowest price on the trading day."
+        tests:
+          - not_null
+
       - name: close_price
-        tests: [not_null]
+        description: "Closing price on the trading day."
+        tests:
+          - not_null
+
       - name: volume
+        description: "Shares traded on the trading day."
+        tests:
+          - not_null
+
       - name: price_change
+        description: "Absolute change from open to close."
+
       - name: pct_change_open_to_close
+        description: "Percentage change from open to close."
+
       - name: company_id
+        description: "Surrogate key from stg_company_metadata."
+
       - name: company_name
+        description: "Full legal company name."
+
       - name: sector
+        description: "Industry sector."
+
       - name: industry
+        description: "Specific industry within the sector."
+
       - name: country
+        description: "Country of incorporation."
+
       - name: exchange
+        description: "Stock exchange."
+
       - name: currency
+        description: "Trading currency."
+
       - name: market_cap_usd
+        description: "Market capitalisation in USD."
+
       - name: market_cap_category
+        description: "Derived size category based on market cap."
+
       - name: full_time_employees
+        description: "Number of full-time employees."
+
+      - name: ingested_at
+        description: "Timestamp of raw data ingestion."
+
+      - name: dbt_updated_at
+        description: "Timestamp of last dbt model run."
 
   - name: int_stock_daily_returns
     description: >
-      Adds day-over-day return metrics to joined stock prices.
-      Includes prev_close, daily_return_pct, intraday range, and trading day sequence.
-    tags: ["intermediate", "returns"]
+      Calculates day-over-day return metrics per ticker using LAG window functions.
+      Also computes intraday range and trading day sequence number.
     columns:
       - name: stock_price_id
-        tests: [unique, not_null]
+        description: "Surrogate key (ticker + price_date)."
+        tests:
+          - not_null
+          - unique
+
       - name: ticker
-        tests: [not_null]
+        description: "Stock ticker symbol."
+        tests:
+          - not_null
+
       - name: price_date
-        tests: [not_null]
+        description: "Trading date."
+        tests:
+          - not_null
+
       - name: prev_close_price
-        description: Previous trading day close price (NULL for first day of history)
+        description: "Closing price of the previous trading day. Null for first trading day."
+
       - name: daily_return_pct
-        description: Day-over-day return % based on previous close (NULL for first day)
+        description: >
+          Percentage return based on previous close price.
+          Null for the first trading day of each ticker.
+
       - name: intraday_range
-        description: high_price minus low_price
+        description: "Absolute difference between high and low price on the trading day."
+        tests:
+          - not_null
+
       - name: intraday_range_pct
-        description: Intraday range as % of close price
+        description: "Intraday range as a percentage of closing price."
+        tests:
+          - not_null
+
       - name: trading_day_seq
-        description: Sequential trading day number per ticker (1 = earliest date)
+        description: "Sequential trading day number per ticker starting from 1."
+        tests:
+          - not_null
 
   - name: int_stock_moving_averages
     description: >
-      Adds 7, 30, 90-day simple moving averages and volume MAs.
-      Also includes a price_vs_sma_30d signal column.
-    tags: ["intermediate", "moving_averages"]
+      Adds 7, 30, and 90-day simple moving averages (SMA) for price and volume
+      on top of daily returns. Also derives a price vs SMA signal and cumulative
+      average return per ticker.
     columns:
       - name: stock_price_id
-        tests: [unique, not_null]
-      - name: ticker
-        tests: [not_null]
-      - name: price_date
-        tests: [not_null]
-      - name: sma_7d
-        description: 7-day simple moving average of close price
-      - name: sma_30d
-        description: 30-day simple moving average of close price
-      - name: sma_90d
-        description: 90-day simple moving average of close price
-      - name: vol_ma_7d
-        description: 7-day moving average of volume
-      - name: vol_ma_30d
-        description: 30-day moving average of volume
-      - name: cumulative_avg_return_pct
-        description: Running average of daily_return_pct since earliest date
-      - name: price_vs_sma_30d
-        description: Whether close is above, below, or at the 30-day MA
+        description: "Surrogate key (ticker + price_date)."
         tests:
+          - not_null
+          - unique
+
+      - name: ticker
+        description: "Stock ticker symbol."
+        tests:
+          - not_null
+
+      - name: price_date
+        description: "Trading date."
+        tests:
+          - not_null
+
+      - name: sma_7d
+        description: "7-day simple moving average of closing price."
+        tests:
+          - not_null
+
+      - name: sma_30d
+        description: "30-day simple moving average of closing price."
+        tests:
+          - not_null
+
+      - name: sma_90d
+        description: "90-day simple moving average of closing price."
+        tests:
+          - not_null
+
+      - name: vol_ma_7d
+        description: "7-day simple moving average of trading volume."
+        tests:
+          - not_null
+
+      - name: vol_ma_30d
+        description: "30-day simple moving average of trading volume."
+        tests:
+          - not_null
+
+      - name: cumulative_avg_return_pct
+        description: "Cumulative average daily return percentage from first trading day."
+
+      - name: price_vs_sma_30d
+        description: "Signal indicating whether close price is above, below or at the 30-day SMA."
+        tests:
+          - not_null
           - accepted_values:
               values: ['Above 30d MA', 'Below 30d MA', 'At 30d MA']

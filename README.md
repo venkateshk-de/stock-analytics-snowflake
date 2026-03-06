@@ -17,7 +17,7 @@ Live dbt lineage graph and model docs:
 ## Tech Stack
 - **Snowflake** — Cloud data warehouse
 - **dbt Core** — Data transformation & modeling
-- **Cybersyn (Snowflake Marketplace)** — Stock market data source
+- **Yahoo Finance Data** — Stock market data source for selected tickers
 - **GitHub Actions** — CI/CD for automated testing
 - **Streamlit** — Analytics dashboard (coming Week 8)
 
