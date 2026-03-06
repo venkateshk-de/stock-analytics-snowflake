@@ -1,4 +1,5 @@
 # CI Pipeline for the stock analytics project
+# Second attempt pushing CI pipeline to see the CI jobs running on github
 name: dbt CI Pipeline
 
 on:
