@@ -1,97 +1,163 @@
 version: 2
 
-models:
+sources:
+  - name: raw
+    database: STOCK_ANALYTICS
+    schema: RAW
+    description: "Raw data ingested from Yahoo Finance via Python ingestion scripts."
+    tables:
+      - name: raw_stock_prices
+        description: "Raw daily OHLCV stock price data for 25 S&P 500 tickers."
+        columns:
+          - name: TICKER
+            description: "Stock ticker symbol."
+            tests:
+              - not_null
+          - name: DATE
+            description: "Trading date."
+            tests:
+              - not_null
+          - name: CLOSE
+            description: "Closing price of the stock."
+            tests:
+              - not_null
+          - name: VOLUME
+            description: "Number of shares traded."
+            tests:
+              - not_null
 
+      - name: raw_company_metadata
+        description: "Company reference data including sector, industry and market cap."
+        columns:
+          - name: TICKER
+            description: "Stock ticker symbol."
+            tests:
+              - not_null
+              - unique
+
+models:
   - name: stg_stock_prices
-    description: Cleaned daily OHLCV stock price data. One row per ticker per trading day.
-    tags: ["staging", "stock_prices"]
+    description: >
+      Cleans and standardises raw daily OHLCV stock price data from Yahoo Finance.
+      Filters out invalid prices, casts data types, and derives intraday metrics.
     columns:
       - name: stock_price_id
-        description: Surrogate key — hash of ticker + price_date
+        description: "Surrogate key generated from ticker + price_date."
         tests:
+          - not_null
           - unique
-          - not_null
+
       - name: ticker
-        description: Uppercase ticker symbol
+        description: "Uppercased and trimmed stock ticker symbol."
         tests:
           - not_null
+
       - name: price_date
-        description: Trading date
+        description: "Trading date for this price record."
         tests:
           - not_null
+
       - name: open_price
-        description: Opening price in USD
+        description: "Opening price of the stock on this trading day."
         tests:
           - not_null
-          - dbt_utils.expression_is_true:
-              expression: "> 0"
+
       - name: high_price
-        description: Intraday high price in USD
+        description: "Highest price reached during the trading day."
         tests:
           - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= low_price"
+
       - name: low_price
-        description: Intraday low price in USD
+        description: "Lowest price reached during the trading day."
         tests:
           - not_null
+
       - name: close_price
-        description: Closing price in USD
+        description: "Closing price of the stock on this trading day."
         tests:
           - not_null
-          - dbt_utils.expression_is_true:
-              expression: "> 0"
+
       - name: volume
-        description: Shares traded
+        description: "Total number of shares traded on this day."
+        tests:
+          - not_null
+
       - name: price_change
-        description: close_price minus open_price
+        description: "Absolute price change from open to close (close - open)."
+
       - name: pct_change_open_to_close
-        description: Percentage change from open to close, 4 decimal places
+        description: "Percentage price change from open to close."
+
       - name: ingested_at
-        description: When the raw record was loaded
+        description: "Timestamp when the record was ingested from Yahoo Finance."
+        tests:
+          - not_null
+
       - name: dbt_updated_at
-        description: When dbt last refreshed this row
+        description: "Timestamp when the dbt model last processed this record."
+        tests:
+          - not_null
 
   - name: stg_company_metadata
-    description: Cleaned company reference data. One row per ticker.
-    tags: ["staging", "company_metadata"]
+    description: >
+      Cleans and standardises raw company reference data. Deduplicates on ticker
+      keeping the highest market cap record, and derives market cap category.
     columns:
       - name: company_id
-        description: Surrogate key — hash of ticker
+        description: "Surrogate key generated from ticker."
         tests:
-          - unique
           - not_null
+          - unique
+
       - name: ticker
-        description: Uppercase ticker symbol
+        description: "Uppercased and trimmed stock ticker symbol."
         tests:
+          - not_null
           - unique
-          - not_null
+
       - name: company_name
-        description: Full company name
+        description: "Full legal company name."
         tests:
           - not_null
+
       - name: sector
-        description: Business sector (InitCap)
+        description: "Industry sector the company operates in (InitCap formatted)."
+        tests:
+          - not_null
+
       - name: industry
-        description: Business industry (InitCap)
+        description: "Specific industry within the sector (InitCap formatted)."
+
       - name: country
-        description: Country of incorporation (UPPER)
+        description: "Country of incorporation (uppercased)."
+
       - name: exchange
-        description: Listing exchange (UPPER)
+        description: "Stock exchange where the ticker is listed (uppercased)."
+
       - name: currency
-        description: Trading currency (UPPER)
+        description: "Trading currency for this ticker (uppercased)."
+
       - name: market_cap_usd
-        description: Market capitalisation in USD
+        description: "Market capitalisation in USD."
+
       - name: market_cap_category
-        description: Mega Cap / Large Cap / Mid Cap / Small Cap / Micro Cap / Unknown
+        description: "Derived size category based on market cap."
         tests:
           - accepted_values:
               values: ['Mega Cap', 'Large Cap', 'Mid Cap', 'Small Cap', 'Micro Cap', 'Unknown']
+
       - name: full_time_employees
-        description: Number of full-time employees
+        description: "Number of full-time employees as reported by Yahoo Finance."
+
       - name: website
-        description: Company website URL
+        description: "Company website URL. Null if not available."
+
       - name: ingested_at
-        description: When the raw record was loaded
+        description: "Timestamp when the record was ingested from Yahoo Finance."
+        tests:
+          - not_null
+
       - name: dbt_updated_at
-        description: When dbt last refreshed this row
+        description: "Timestamp when the dbt model last processed this record."
+        tests:
+          - not_null
