@@ -5,7 +5,8 @@ logs/
 ingestion/*.csv
 ingestion/*.csv.gz
 
-packages.yml
+# packages.yml
+package-lock.yml
 
 # Credentials — NEVER commit these
 profiles.yml
