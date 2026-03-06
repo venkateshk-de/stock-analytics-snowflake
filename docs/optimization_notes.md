@@ -1,7 +1,7 @@
-# Week 7 — Snowflake Optimizations
+# Snowflake Optimizations
 
 ## Overview
-This section documents the performance optimizations applied to the
+This section documents the performance optimizations that can be applied to the
 stock analytics pipeline and their measured impact.
 
 ---
@@ -74,6 +74,8 @@ A healthy output shows:
 ---
 
 ## 3. Performance Metrics
+### The metrics has been left blank intentionally as there won't be impactable measure with data size of around 45000 rows
+### The optimization pattern still holds true when this data grows at scale of millions or billions of rows.
 
 ### Before Optimization (Full Refresh TABLE)
 _(Fill in after running QUERY 1 in performance_analysis.sql)_
