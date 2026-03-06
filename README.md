@@ -19,7 +19,7 @@ Live dbt lineage graph and model docs:
 - **dbt Core** — Data transformation & modeling
 - **Yahoo Finance Data** — Stock market data source for selected tickers
 - **GitHub Actions** — CI/CD for automated testing
-- **Streamlit** — Analytics dashboard (coming Week 8)
+- **Streamlit** — Analytics dashboard
 
 ## Project Structure
 \`\`\`
@@ -38,6 +38,12 @@ stock-analytics-snowflake/
 | Marts | Fact & dimension tables for analytics |
 
 ## Lineage Diagram
+
+## CI/CD Pipeline
+![CI Pipeline](docs/ci_pipeline_success.png)
+
+All dbt models are automatically compiled, tested and built
+on every push via GitHub Actions.
 
 
 ## Setup Instructions
