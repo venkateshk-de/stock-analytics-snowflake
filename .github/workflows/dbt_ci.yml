@@ -24,7 +24,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DBT_VERSION: "1.7.0"
+  DBT_CORE_VERSION: "1.11.6"
+  DBT_SNOWFLAKE_VERSION: "1.11.2"
 
 jobs:
 
@@ -48,8 +49,8 @@ jobs:
       - name: Install dbt and Snowflake adapter
         run: |
           pip install \
-            dbt-core==${{ env.DBT_VERSION }} \
-            dbt-snowflake==${{ env.DBT_VERSION }}
+            dbt-core==${{ env.DBT_CORE_VERSION }} \
+            dbt-snowflake==${{ env.DBT_SNOWFLAKE_VERSION }}
 
       - name: Generate profiles.yml from GitHub Secrets
         run: |
@@ -98,8 +99,8 @@ jobs:
       - name: Install dbt and Snowflake adapter
         run: |
           pip install \
-            dbt-core==${{ env.DBT_VERSION }} \
-            dbt-snowflake==${{ env.DBT_VERSION }}
+            dbt-core==${{ env.DBT_CORE_VERSION }} \
+            dbt-snowflake==${{ env.DBT_SNOWFLAKE_VERSION }}
 
       - name: Generate profiles.yml from GitHub Secrets
         run: |
@@ -165,8 +166,8 @@ jobs:
       - name: Install dbt and Snowflake adapter
         run: |
           pip install \
-            dbt-core==${{ env.DBT_VERSION }} \
-            dbt-snowflake==${{ env.DBT_VERSION }}
+            dbt-core==${{ env.DBT_CORE_VERSION }} \
+            dbt-snowflake==${{ env.DBT_SNOWFLAKE_VERSION }}
 
       - name: Generate profiles.yml from GitHub Secrets
         run: |
