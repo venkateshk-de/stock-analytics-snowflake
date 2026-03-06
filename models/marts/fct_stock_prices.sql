@@ -1,8 +1,11 @@
 {{
   config(
-    materialized = 'table',
-    schema       = 'MARTS',
-    tags         = ['marts', 'stock_prices']
+    materialized        = 'incremental',
+    schema              = 'MARTS',
+    unique_key          = 'stock_price_id',
+    incremental_strategy = 'merge',
+    cluster_by          = ['price_date', 'ticker'],
+    tags                = ['marts', 'stock_prices']
   )
 }}
 
@@ -12,8 +15,18 @@
   Final fact table combining all stock price data with returns,
   moving averages, and company attributes.
 
-  This is the primary table for BI tools and analysis.
-  Materialised as TABLE for query performance.
+  Optimizations:
+    - Converted from TABLE to INCREMENTAL (merge strategy)
+    - Added clustering keys on price_date and ticker
+    - Incremental filter: only processes new/updated records
+      based on ingested_at timestamp
+
+  Incremental logic:
+    - On first run → full load of all data
+    - On subsequent runs → only processes records where
+      ingested_at > max ingested_at already in the table
+    - unique_key = stock_price_id ensures upsert behaviour
+      (no duplicates even if a record is reprocessed)
 */
 
 with
@@ -21,6 +34,14 @@ with
 base as (
 
     select * from {{ ref('int_stock_moving_averages') }}
+
+    -- Incremental filter — only process new records on subsequent runs
+    {% if is_incremental() %}
+        where ingested_at > (
+            select max(ingested_at)
+            from {{ this }}
+        )
+    {% endif %}
 
 ),
 
