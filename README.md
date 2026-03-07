@@ -1,4 +1,6 @@
+<div align="center">
 # 📈 Stock Analytics Platform on Snowflake
+</div>
 
 <div align="center">
 
