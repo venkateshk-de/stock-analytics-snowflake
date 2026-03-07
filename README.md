@@ -449,7 +449,7 @@ Sequential job dependencies in GitHub Actions — where compile must pass before
 
 *If this project helped you learn, please ⭐ the repo!*
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0077B5?style=flat&logo=linkedin)](www.linkedin.com/in/venkateshkondam)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0077B5?style=flat&logo=linkedin)](https://www.linkedin.com/in/venkateshkondam/)
 [![GitHub](https://img.shields.io/badge/GitHub-Follow-181717?style=flat&logo=github)](https://github.com/venkateshk-de)
 
 </div>
