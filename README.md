@@ -1,5 +1,5 @@
 <div align="center">
-# 📈 Stock Analytics Platform on Snowflake
+ 📈 Stock Analytics Platform on Snowflake
 </div>
 
 <div align="center">
@@ -14,7 +14,7 @@
 
 *Ingestion → Transformation → Testing → CI/CD → Dashboard*
 
-[View Dashboard](#-live-dashboard) · [Architecture](#-architecture) · [Setup Guide](#-getting-started) · [Weekly Progress](#-project-journey)
+[View Dashboard](#-live-dashboard) · ![Architecture](docs/architecture_sketch.png) · [Setup Guide](#-getting-started) · [Weekly Progress](#-project-journey)
 
 </div>
 
