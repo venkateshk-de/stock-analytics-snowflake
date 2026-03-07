@@ -51,3 +51,9 @@ _(To be filled as project progresses)_
 
 ## Key Insights
 _(To be filled after data exploration)_
+
+## 📊 Live Dashboard
+Built with Streamlit in Snowflake — 6 analytical views across
+25 S&P 500 tickers with dark theme and interactive filters.
+
+![Dashboard](docs/dashboard_screenshot.png)
