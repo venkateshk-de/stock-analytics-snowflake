@@ -424,12 +424,6 @@ Sequential job dependencies in GitHub Actions — where compile must pass before
 
 ---
 
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
----
-
 <div align="center">
 
 **Built with ❤️ as a data engineering portfolio project**
