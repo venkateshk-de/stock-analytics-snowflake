@@ -60,7 +60,7 @@ This project demonstrates a **complete, production-grade data engineering pipeli
 
 ## 🏛️ Architecture
 
-![Architecture Diagram](docs/architechture_diagram.gif)
+![Architecture Diagram](docs/architecture_sketch.png)
 
 **Pipeline layers (left column):**
 `Yahoo Finance` → `Python Ingestion` → `Snowflake Internal Stage` → `RAW` → `STAGING (views)` → `INTERMEDIATE (views)` → `MARTS (incremental tables)` → `Streamlit Dashboard`
