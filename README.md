@@ -1,6 +1,4 @@
-<div align="center">
- 📈 Stock Analytics Platform on Snowflake
-</div>
+# 📈 Stock Analytics Platform on Snowflake
 
 <div align="center">
 
@@ -14,9 +12,29 @@
 
 *Ingestion → Transformation → Testing → CI/CD → Dashboard*
 
-[View Dashboard](#-live-dashboard) · ![Architecture](docs/architecture_sketch.png) · [Setup Guide](#-getting-started) · [Weekly Progress](#-project-journey)
+[🖥️ Live Dashboard](#%EF%B8%8F-live-dashboard) · [🏛️ Architecture](#%EF%B8%8F-architecture) · [🚀 Setup Guide](#-getting-started) · [🗓️ Weekly Progress](#%EF%B8%8F-project-journey)
 
 </div>
+
+---
+
+## 🖥️ Live Dashboard
+
+> Deployed natively on Snowflake using Streamlit in Snowflake (SiS)
+> Dashboard queries `STOCK_ANALYTICS.MARTS` live via a Snowpark session — available for demo on request.
+
+![Dashboard Demo](docs/dashboard_demo.gif)
+
+**6 interactive tabs:**
+
+| Tab | What It Shows |
+|---|---|
+| 📈 Price & OHLCV | Candlestick chart with open/high/low/close bars |
+| 〰️ Moving Averages | Close price overlaid with SMA 7D / 30D / 90D |
+| 📊 Volume Analysis | Daily volume bars (green/red) + volume MA lines |
+| 🌡️ Returns Heatmap | Daily return % heatmap across all 25 tickers |
+| 🏭 Sector Performance | Avg return by sector + risk vs return scatter |
+| 🏆 Top 10 by 30D Return | Ranked bar chart + leaderboard |
 
 ---
 
@@ -42,56 +60,15 @@ This project demonstrates a **complete, production-grade data engineering pipeli
 
 ## 🏛️ Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        DATA SOURCES                             │
-│              Yahoo Finance API (via yfinance)                   │
-│         25 S&P 500 tickers · 5 years · Daily OHLCV             │
-└─────────────────────────┬───────────────────────────────────────┘
-                          │ Python Ingestion Scripts
-                          │ PUT → Internal Stage → COPY INTO
-                          ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     SNOWFLAKE RAW LAYER                         │
-│   RAW_STOCK_PRICES          RAW_COMPANY_METADATA               │
-│   (44,950+ rows)            (25 rows)                          │
-└─────────────────────────┬───────────────────────────────────────┘
-                          │ dbt Core 1.11.6
-                          ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    STAGING LAYER (Views)                        │
-│   stg_stock_prices          stg_company_metadata               │
-│   • Cast & validate types   • Deduplicate on ticker            │
-│   • Filter invalid prices   • Derive market_cap_category       │
-│   • Surrogate keys          • Normalise casing                 │
-└─────────────────────────┬───────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                 INTERMEDIATE LAYER (Views)                      │
-│   int_stock_prices_joined   int_stock_daily_returns            │
-│   • Join prices + metadata  • LAG() for daily return %         │
-│                             • Intraday range calculations       │
-│   int_stock_moving_averages                                     │
-│   • SMA 7D / 30D / 90D      • Volume moving averages           │
-│   • Cumulative avg return   • Price vs SMA signal              │
-└─────────────────────────┬───────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   MARTS LAYER (Tables)                          │
-│   fct_stock_prices          dim_companies                      │
-│   • Incremental (merge)     • Incremental (merge)              │
-│   • Clustered: date+ticker  • Clustered: sector+ticker         │
-│   • 50+ columns             • 14 columns                       │
-└─────────────────────────┬───────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────────┐
-│              STREAMLIT IN SNOWFLAKE DASHBOARD                   │
-│   6 interactive tabs · Dark theme · Real-time Snowflake data   │
-└─────────────────────────────────────────────────────────────────┘
-```
+![Architecture Diagram](docs/architecture_sketch.png)
+
+> **To generate this image:** Open `docs/architecture_sketch.html` in Chrome → `Ctrl+Shift+P` → type **"Capture full size screenshot"** → save as `docs/architecture_sketch.png` and commit.
+
+**Pipeline layers (left column):**
+`Yahoo Finance` → `Python Ingestion` → `Snowflake Internal Stage` → `RAW` → `STAGING (views)` → `INTERMEDIATE (views)` → `MARTS (incremental tables)` → `Streamlit Dashboard`
+
+**CI/CD (right column):**
+`GitHub PR` → `Job 1: dbt compile` → `Job 2: dbt test` → `Job 3: dbt build` → `Branch protection → merge to main`
 
 ---
 
@@ -405,6 +382,8 @@ This project was built week by week as a structured data engineering learning pa
 
 ## 📈 Key Insights From the Data
 
+> *(Update these after exploring your data)*
+
 - **Top performing sector (30D):** Technology — driven by NVDA and META momentum
 - **Most volatile ticker:** TSLA — consistently highest standard deviation of daily returns
 - **Highest average daily volume:** AAPL — 32M+ shares/day average over 5 years
@@ -445,13 +424,19 @@ Sequential job dependencies in GitHub Actions — where compile must pass before
 
 ---
 
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+---
+
 <div align="center">
 
 **Built with ❤️ as a data engineering portfolio project**
 
 *If this project helped you learn, please ⭐ the repo!*
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0077B5?style=flat&logo=linkedin)](https://www.linkedin.com/in/venkateshkondam/)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0077B5?style=flat&logo=linkedin)](https://www.linkedin.com/in/venkateshkondam)
 [![GitHub](https://img.shields.io/badge/GitHub-Follow-181717?style=flat&logo=github)](https://github.com/venkateshk-de)
 
 </div>
